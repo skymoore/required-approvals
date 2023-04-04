@@ -5,7 +5,6 @@ from github import Github
 
 
 def get_required_codeowners(repo, pr, directory):
-
     codeowners_content = repo.get_contents(".github/CODEOWNERS", ref=pr.base.ref)
     logging.info(f"Codeowners content:\n{codeowners_content.decoded_content.decode('utf-8')}")
     codeowners_rules = codeowners_content.decoded_content.decode('utf-8').split('\n')
@@ -37,7 +36,7 @@ def get_user_teams(gh, username, org_name):
         org_team_members = [member.login for member in team.get_members()]
         logging.info(f"Found members for {org.login}/{team.name}: {list(org_team_members)}")
         if user.login in org_team_members:
-            teams.append((org.login, team.name))
+            teams.append(team)
 
     return teams
 
