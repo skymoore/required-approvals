@@ -1,0 +1,16 @@
+name: 'Required Approvals'
+description: 'Checks if the required codeowners have approved a PR and requires a minimum number of approvals'
+inputs:
+  token:
+    description: 'GitHub token'
+    required: true
+  min_approvals:
+    description: 'Minimum number of approvals required'
+    required: true
+    default: '1'
+outputs:
+  approved:
+    description: 'Boolean output representing if all required approvals have occurred'
+runs:
+  using: 'node16'
+  main: 'index.js'
