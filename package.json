@@ -1,0 +1,23 @@
+{
+    "name": "required-approvals",
+    "version": "1.0.0",
+    "description": "Checks if the required codeowners have approved a PR and requires a minimum number of approvals",
+    "main": "index.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/<your-github-username>/required-approvals.git"
+    },
+    "keywords": [
+      "github-actions"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+      "@actions/core": "^1.6.0",
+      "@actions/github": "^5.0.0"
+    }
+  }
+  
