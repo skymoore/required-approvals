@@ -12,8 +12,10 @@ def get_required_codeowners(repo, pr, directory):
         logging.info("No CODEOWNERS file found")
         exit(1)
 
-    logging.debug(f"Codeowners content:\n{codeowners_content.decoded_content.decode('utf-8')}")
-    codeowners_rules = codeowners_content.decoded_content.decode('utf-8').split('\n')
+    logging.debug(
+        f"Codeowners content:\n{codeowners_content.decoded_content.decode('utf-8')}"
+    )
+    codeowners_rules = codeowners_content.decoded_content.decode("utf-8").split("\n")
     logging.debug(f"Codeowners rules:\n{codeowners_rules}")
 
     required_codeowner_teams = {}
@@ -28,7 +30,8 @@ def get_required_codeowners(repo, pr, directory):
                 team_name = team.split("/")[1]
                 required_codeowner_teams[team_name] = False
 
-    return required_codeowner_teams 
+    return required_codeowner_teams
+
 
 def get_user_teams(gh, username, org_name):
     logging.debug(f"Getting teams for {username}")
@@ -40,11 +43,14 @@ def get_user_teams(gh, username, org_name):
 
     for team in org_teams:
         org_team_members = [member.login for member in team.get_members()]
-        logging.debug(f"Found members for {org.login}/{team.name}: {list(org_team_members)}")
+        logging.debug(
+            f"Found members for {org.login}/{team.name}: {list(org_team_members)}"
+        )
         if user.login in org_team_members:
             teams.append(team)
 
     return teams
+
 
 def main():
     token = os.environ["INPUT_TOKEN"]
@@ -53,15 +59,15 @@ def main():
     min_approvals = int(os.environ["INPUT_MIN_APPROVALS"])
     gh_ref = os.environ["GITHUB_REF"]
     gh_repo = os.environ["GITHUB_REPOSITORY"]
-    
+
     gh = Github(token)
     gh_org = Github(read_org_token)
     repo = gh.get_repo(gh_repo)
     logging.debug(gh_ref)
-    gh_ref_parts = gh_ref.split('/')
+    gh_ref_parts = gh_ref.split("/")
     logging.debug(gh_ref_parts)
     pr_number = int(gh_ref_parts[-2])
-    
+
     pr = repo.get_pull(pr_number)
     reviews = pr.get_reviews()
 
@@ -88,37 +94,56 @@ def main():
                 if team.name in required_codeowner_teams:
                     required_codeowner_teams[team.name] = True
                     approved_codeowners.append(review.user.login)
-                    logging.info(f"  {review.user.login} {review.state}: for: {team.name}")
+                    logging.info(
+                        f"  {review.user.login} {review.state}: for: {team.name}"
+                    )
 
         elif review.state == "CHANGES_REQUESTED":
             for team in user_teams:
                 if team.name in required_codeowner_teams:
                     required_codeowner_teams[team.name] = False
-                    logging.info(f"  {review.user.login} {review.state}: for: {team.name}")
+                    logging.info(
+                        f"  {review.user.login} {review.state}: for: {team.name}"
+                    )
 
         else:
             logging.debug(f"  {review.user.login} {review.state}: ignoring")
-    
+
     all_codeowners_approved = all(required_codeowner_teams.values())
     min_approvals_met = len(approved_codeowners) >= min_approvals
 
-    required_approvals = (all_codeowners_approved and min_approvals_met)
-    
+    co_reason = (
+        "all codeowners approved"
+        if all_codeowners_approved
+        else "not all codeowners approved"
+    )
+    ma_reason = (
+        f"total approvals:{len(approved_codeowners)} >= minimum approvals:{min_approvals}"
+        if min_approvals_met
+        else f"total approvals:{len(approved_codeowners)} < minimum approvals:{min_approvals}"
+    )
+    reason = f"{co_reason} and {ma_reason}"
+
+    required_approvals = all_codeowners_approved and min_approvals_met
+
     print(f"::set-output name=approved::{str(required_approvals).lower()}")
 
     if required_approvals:
-        logging.info(f"Required approvals met: {required_codeowner_teams}")
+        logging.info(f"Required approvals met: {required_codeowner_teams}\n{reason}")
         exit(0)
     else:
-        logging.info(f"Required approvals not met: {required_codeowner_teams}")
+        logging.info(
+            f"Required approvals not met: {required_codeowner_teams}\n{reason}"
+        )
         exit(1)
+
 
 if __name__ == "__main__":
     log_level = os.environ.get("RUNNER_DEBUG", "0")
     logging.basicConfig(
         level=logging.INFO if log_level == "0" else logging.DEBUG,
         format="%(asctime)s [%(levelname)s] %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
     logging.info("Starting required-approvals action")
     logging.debug("Debug logging enabled")
