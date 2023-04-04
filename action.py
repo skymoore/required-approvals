@@ -104,7 +104,7 @@ def main():
 
     required_approvals = (all_codeowners_approved and min_approvals_met)
     
-    os.environ["OUTPUT_APPROVED"] = str(required_approvals).lower()
+    print(f"::set-output name=approved::{str(required_approvals).lower()}")
 
     if required_approvals:
         logging.info(f"Required approvals met: {required_codeowner_teams}")
