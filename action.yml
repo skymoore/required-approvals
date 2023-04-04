@@ -1,5 +1,8 @@
 name: 'Required Approvals'
 description: 'Checks if the required codeowners have approved a PR and requires a minimum number of approvals'
+branding:
+  icon: 'check-square'
+  color: 'green'
 inputs:
   token:
     description: 'GitHub token'
