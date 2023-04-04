@@ -5,12 +5,12 @@ inputs:
     description: 'GitHub token'
     required: true
   min_approvals:
-    description: 'Minimum number of approvals required'
+    description: 'Minimum number of approvals'
     required: true
-    default: '1'
 outputs:
   approved:
-    description: 'Boolean output representing if all required approvals have occurred'
+    description: 'True if all required approvals are met, false otherwise'
+
 runs:
-  using: 'node16'
-  main: 'index.js'
+  using: 'docker'
+  image: 'Dockerfile'
