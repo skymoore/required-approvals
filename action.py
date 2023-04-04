@@ -19,7 +19,8 @@ def get_required_codeowners(repo, pr, directory):
             line_list.pop(0)
             for team in line_list:
                 logging.info(f"Found team: {team} (required)")
-                required_codeowner_teams[team] = False
+                team_name = team.split("/")[1]
+                required_codeowner_teams[team_name] = False
 
     logging.info(f"Required codeowners: {required_codeowner_teams}")
     return required_codeowner_teams 
@@ -108,10 +109,12 @@ def main():
         exit(1)
 
 if __name__ == "__main__":
-    log_level = os.environ.get("DEBUG_LOGGING", "0")
+    log_level = os.environ.get("RUNNER_DEBUG", "0")
     logging.basicConfig(
-        level=logging.info if log_level == "1" else logging.INFO,
+        level=logging.INFO if log_level == "0" else logging.DEBUG,
         format="%(asctime)s [%(levelname)s] %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
+    logging.info("Starting action")
+    logging.debug("Debug logging enabled")
     main()
