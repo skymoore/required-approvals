@@ -29,12 +29,15 @@ def get_user_teams(gh, username):
     logging.info(f"Getting teams for {username}")
     user = gh.get_user(username)
     organizations = user.get_orgs()
-    logging.info(f"Found organizations for {username}: {organizations}")
+    logging.info(f"Found organizations for {username}: {list(organizations)}")
     teams = []
     for org in organizations:
         org_teams = org.get_teams()
+        logging.info(f"Found teams for {org.login}: {list(org_teams)}")
         for team in org_teams:
-            if user in team.get_members():
+            org_team_members = team.get_members()
+            logging.info(f"Found members for {org.login}/{team.name}: {list(org_team_members)}")
+            if user in org_team_members:
                 teams.append((org.login, team.name))
 
     return teams
