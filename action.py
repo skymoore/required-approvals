@@ -26,7 +26,8 @@ def main():
     
     g = Github(token)
     repo = g.get_repo(gh_repo)
-    pr_number = int(gh_ref.split('/')[-1])
+    print(gh_ref)
+    pr_number = int(gh_ref.split('/')[-2])
     
     pr = repo.get_pull(pr_number)
     reviews = pr.get_reviews()
@@ -38,6 +39,7 @@ def main():
     for dir in changed_dirs:
         required_codeowner_teams.update(get_required_codeowners(repo, pr, dir))
 
+    reviews = list(reviews)
     print(f"Found {len(reviews)} reviews for PR {pr_number} ({pr.title}):")
     approved_codeowners = []
     for r in reviews:
