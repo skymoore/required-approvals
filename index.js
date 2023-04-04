@@ -30,12 +30,42 @@ const github = require('@actions/github');
 
       const codeowners = Buffer.from(codeownersContent.data.content, 'base64').toString('utf8');
       console.log(`Codeowners file content: ${codeowners}`)
-      
-      const codeownerUsernames = codeowners.split('\n')
-        .filter(line => line.trim() && line.includes(' '))
-        .map(line => line.split(' ')[1].substring(1));
 
-      console.log(`Codeowners: ${codeownerUsernames}`);
+      const codeownerRules = codeowners.split('\n')
+        .filter(line => line.trim() && line.includes(' '))
+        .map(line => {
+          const [path, ...usernames] = line.split(' ');
+          return {
+            path,
+            usernames: usernames.map(username => username.substring(1))
+          };
+        });
+
+      // Get PR file changes
+      const changedFiles = await octokit.rest.pulls.listFiles({
+        owner,
+        repo,
+        pull_number: prNumber
+      });
+
+      const changedDirectories = changedFiles.data.map(file => {
+        const filePathParts = file.filename.split('/');
+        filePathParts.pop();
+        return filePathParts.join('/') + '/';
+      });
+
+      const requiredCodeowners = [];
+      for (const dir of changedDirectories) {
+        for (const rule of codeownerRules) {
+          if (dir.startsWith(rule.path)) {
+            requiredCodeowners.push(...rule.usernames);
+            break;
+          }
+        }
+      }
+
+      const uniqueCodeowners = [...new Set(requiredCodeowners)];
+      console.log(`Codeowners: ${uniqueCodeowners}`);
 
       // Get PR reviews
       const reviews = await octokit.rest.pulls.listReviews({
@@ -49,7 +79,7 @@ const github = require('@actions/github');
         .filter(review => review.state === 'APPROVED')
         .map(review => review.user.login);
 
-      const allCodeownersApproved = codeownerUsernames.every(username => approvedCodeowners.includes(username));
+      const allCodeownersApproved = uniqueCodeowners.every(username => approvedCodeowners.includes(username));
       console.log(`All Codeowners Approved: ${allCodeownersApproved}`);
 
       // Check minimum approvals
