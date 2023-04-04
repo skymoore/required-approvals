@@ -66,7 +66,11 @@ def main():
     logging.debug(gh_ref)
     gh_ref_parts = gh_ref.split("/")
     logging.debug(gh_ref_parts)
-    pr_number = int(gh_ref_parts[-2])
+
+    if "INPUT_PR_NUMBER" not in os.environ:
+        pr_number = int(gh_ref_parts[-1])
+    else:
+        pr_number = int(os.environ["INPUT_PR_NUMBER"])
 
     pr = repo.get_pull(pr_number)
     reviews = pr.get_reviews()

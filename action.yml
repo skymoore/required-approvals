@@ -1,25 +1,28 @@
-name: 'Required Approvals'
-description: 'Checks if the required codeowners have approved a PR and requires a minimum number of approvals'
+name: "Required Approvals"
+description: "Checks if the required codeowners have approved a PR and requires a minimum number of approvals"
 branding:
-  icon: 'check-square'
-  color: 'green'
+  icon: "check-square"
+  color: "green"
 inputs:
   token:
-    description: 'GitHub token'
+    description: "GitHub token"
     required: true
   read_org_scoped_token:
-    description: 'GitHub token with read:org scope'
+    description: "GitHub token with read:org scope"
     required: true
   org_name:
-    description: 'Organization name'
+    description: "Organization name"
     required: true
   min_approvals:
-    description: 'Minimum number of approvals'
+    description: "Minimum number of approvals"
     required: true
+  pr_number:
+    description: "Pull request number, will check approvals on this PR if supplied. If not supplied, will check approvals on the PR that triggered the workflow"
+    required: false
 outputs:
   approved:
-    description: 'True if all required approvals are met, false otherwise'
+    description: "True if all required approvals are met, false otherwise"
 
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: "docker"
+  image: "Dockerfile"
