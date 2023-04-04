@@ -6,6 +6,12 @@ from github import Github
 
 def get_required_codeowners(repo, pr, directory):
     codeowners_content = repo.get_contents(".github/CODEOWNERS", ref=pr.base.ref)
+    if codeowners_content is None:
+        codeowners_content = repo.get_contents("CODEOWNERS", ref=pr.base.ref)
+    if codeowners_content is None:
+        logging.info("No CODEOWNERS file found")
+        exit(1)
+
     logging.debug(f"Codeowners content:\n{codeowners_content.decoded_content.decode('utf-8')}")
     codeowners_rules = codeowners_content.decoded_content.decode('utf-8').split('\n')
     logging.debug(f"Codeowners rules:\n{codeowners_rules}")
