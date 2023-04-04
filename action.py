@@ -25,14 +25,26 @@ def get_required_codeowners(repo, pr, directory):
     logging.info(f"Required codeowners: {required_codeowner_teams}")
     return required_codeowner_teams 
 
+def get_user_teams(gh, username):
+    user = gh.get_user(username)
+    organizations = user.get_orgs()
+    teams = []
+    for org in organizations:
+        org_teams = org.get_teams()
+        for team in org_teams:
+            if user in team.get_members():
+                teams.append((org.login, team.name))
+
+    return teams
+
 def main():
     token = os.environ["INPUT_TOKEN"]
     min_approvals = int(os.environ["INPUT_MIN_APPROVALS"])
     gh_ref = os.environ["GITHUB_REF"]
     gh_repo = os.environ["GITHUB_REPOSITORY"]
     
-    g = Github(token)
-    repo = g.get_repo(gh_repo)
+    gh = Github(token)
+    repo = gh.get_repo(gh_repo)
     logging.info(gh_ref)
     gh_ref_parts = gh_ref.split('/')
     logging.info(gh_ref_parts)
@@ -56,17 +68,20 @@ def main():
     approved_codeowners = []
     for review in reviews:
         logging.info("Review: " + str(review))
-        user_teams = [t for t in review.user.get_teams()]
+        user_teams = get_user_teams(gh, review.user.login)
         logging.info(f"  {review.user.login} {review.state}: teams: {user_teams}")
+
         if review.state == "APPROVED":
             for team in user_teams:
                 if team.name in required_codeowner_teams:
                     required_codeowner_teams[team.name] = True
                     approved_codeowners.append(review.user.login)
+
         elif review.state == "CHANGES_REQUESTED":
             for team in user_teams:
                 if team.name in required_codeowner_teams:
                     required_codeowner_teams[team.name] = False
+
         else:
             logging.info(f"  {review.user.login} {review.state}: ignoring")
     
