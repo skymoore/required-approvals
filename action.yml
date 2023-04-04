@@ -7,6 +7,9 @@ inputs:
   read_org_scoped_token:
     description: 'GitHub token with read:org scope'
     required: true
+  org_name:
+    description: 'Organization name'
+    required: true
   min_approvals:
     description: 'Minimum number of approvals'
     required: true

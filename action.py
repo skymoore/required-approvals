@@ -25,26 +25,26 @@ def get_required_codeowners(repo, pr, directory):
     logging.info(f"Required codeowners: {required_codeowner_teams}")
     return required_codeowner_teams 
 
-def get_user_teams(gh, username):
+def get_user_teams(gh, username, org_name):
     logging.info(f"Getting teams for {username}")
     user = gh.get_user(username)
-    organizations = user.get_orgs()
-    logging.info(f"Found organizations for {username}: {list(organizations)}")
+    org = gh.get_organization(org_name)
+    org_teams = org.get_teams()
+    logging.info(f"Found teams for {org.login}: {list(org_teams)}")
     teams = []
-    for org in organizations:
-        org_teams = org.get_teams()
-        logging.info(f"Found teams for {org.login}: {list(org_teams)}")
-        for team in org_teams:
-            org_team_members = team.get_members()
-            logging.info(f"Found members for {org.login}/{team.name}: {list(org_team_members)}")
-            if user in org_team_members:
-                teams.append((org.login, team.name))
+
+    for team in org_teams:
+        org_team_members = [member.login for member in team.get_members()]
+        logging.info(f"Found members for {org.login}/{team.name}: {list(org_team_members)}")
+        if user.login in org_team_members:
+            teams.append((org.login, team.name))
 
     return teams
 
 def main():
     token = os.environ["INPUT_TOKEN"]
     read_org_token = os.environ["INPUT_READ_ORG_SCOPED_TOKEN"]
+    org_name = os.environ["INPUT_ORG_NAME"]
     min_approvals = int(os.environ["INPUT_MIN_APPROVALS"])
     gh_ref = os.environ["GITHUB_REF"]
     gh_repo = os.environ["GITHUB_REPOSITORY"]
@@ -75,7 +75,7 @@ def main():
     approved_codeowners = []
     for review in reviews:
         logging.info("Review: " + str(review))
-        user_teams = get_user_teams(gh_org, review.user.login)
+        user_teams = get_user_teams(gh_org, review.user.login, org_name)
         logging.info(f"  {review.user.login} {review.state}: teams: {user_teams}")
 
         if review.state == "APPROVED":
