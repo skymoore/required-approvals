@@ -26,8 +26,10 @@ def get_required_codeowners(repo, pr, directory):
     return required_codeowner_teams 
 
 def get_user_teams(gh, username):
+    logging.info(f"Getting teams for {username}")
     user = gh.get_user(username)
     organizations = user.get_orgs()
+    logging.info(f"Found organizations for {username}: {organizations}")
     teams = []
     for org in organizations:
         org_teams = org.get_teams()
@@ -39,11 +41,13 @@ def get_user_teams(gh, username):
 
 def main():
     token = os.environ["INPUT_TOKEN"]
+    read_org_token = os.environ["INPUT_READ_ORG_SCOPED_TOKEN"]
     min_approvals = int(os.environ["INPUT_MIN_APPROVALS"])
     gh_ref = os.environ["GITHUB_REF"]
     gh_repo = os.environ["GITHUB_REPOSITORY"]
     
     gh = Github(token)
+    gh_org = Github(read_org_token)
     repo = gh.get_repo(gh_repo)
     logging.info(gh_ref)
     gh_ref_parts = gh_ref.split('/')
@@ -68,7 +72,7 @@ def main():
     approved_codeowners = []
     for review in reviews:
         logging.info("Review: " + str(review))
-        user_teams = get_user_teams(gh, review.user.login)
+        user_teams = get_user_teams(gh_org, review.user.login)
         logging.info(f"  {review.user.login} {review.state}: teams: {user_teams}")
 
         if review.state == "APPROVED":

@@ -4,6 +4,9 @@ inputs:
   token:
     description: 'GitHub token'
     required: true
+  read_org_scoped_token:
+    description: 'GitHub token with read:org scope'
+    required: true
   min_approvals:
     description: 'Minimum number of approvals'
     required: true
