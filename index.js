@@ -29,7 +29,12 @@ const github = require('@actions/github');
       });
 
       const codeowners = Buffer.from(codeownersContent.data.content, 'base64').toString('utf8');
-      const codeownerUsernames = codeowners.split('\n').map(line => line.split(' ')[1].substring(1));
+      console.log(`Codeowners file content: ${codeowners}`)
+      
+      const codeownerUsernames = codeowners.split('\n')
+        .filter(line => line.trim() && line.includes(' '))
+        .map(line => line.split(' ')[1].substring(1));
+
       console.log(`Codeowners: ${codeownerUsernames}`);
 
       // Get PR reviews
