@@ -1,7 +1,19 @@
 #!/usr/bin/env python3
 
-import os, logging
+import os, logging, subprocess
 from github import Github
+
+
+def get_newest_pr_number_by_branch(gh, branch_name, repo_name):
+    repo = gh.get_repo(repo_name)
+    pull_requests = repo.get_pulls(state="all", head=branch_name)
+    if pull_requests.totalCount == 0:
+        logging.info(f"No PRs found for branch {branch_name}")
+        exit(1)
+    pull_requests = list(pull_requests)
+    pull_requests = sorted(pull_requests, key=lambda pr: pr.created_at, reverse=True)
+    newest_pr = pull_requests[0].number
+    return newest_pr
 
 
 def get_required_codeowners(repo, pr, directory):
@@ -67,10 +79,14 @@ def main():
     gh_ref_parts = gh_ref.split("/")
     logging.debug(gh_ref_parts)
 
-    if "INPUT_PR_NUMBER" not in os.environ:
-        pr_number = int(gh_ref_parts[-1])
-    else:
+    if "INPUT_PR_NUMBER" in os.environ and os.environ["INPUT_PR_NUMBER"] != "":
         pr_number = int(os.environ["INPUT_PR_NUMBER"])
+    elif "INPUT_BRANCH" in os.environ and os.environ["INPUT_BRANCH"] != "":
+        pr_number = get_newest_pr_number_by_branch(
+            gh, os.environ["INPUT_BRANCH"], gh_repo
+        )
+    else:
+        pr_number = int(gh_ref_parts[-1])
 
     pr = repo.get_pull(pr_number)
     reviews = pr.get_reviews()
@@ -89,11 +105,17 @@ def main():
     logging.info(f"Found {len(reviews)} reviews for PR {pr_number} ({pr.title}):")
     approved_codeowners = []
     logging.info("Reviews: ")
+
     for review in reviews:
         user_teams = get_user_teams(gh_org, review.user.login, org_name)
         logging.debug(f"  {review.user.login} {review.state}: teams: {user_teams}")
 
         if review.state == "APPROVED":
+            # TODO: make sure a dismissed review doesn't count as an approval
+            #  2023-04-05 06:09:56 [INFO] Found 2 reviews for PR 2 (IN-3032: testing):
+            #  2023-04-05 06:09:56 [INFO] Reviews:
+            #  2023-04-05 06:10:00 [INFO]   vistrcm APPROVED: for: infra
+            #  2023-04-05 06:10:04 [INFO]   vistrcm APPROVED: for: infra
             for team in user_teams:
                 if team.name in required_codeowner_teams:
                     required_codeowner_teams[team.name] = True
@@ -130,9 +152,18 @@ def main():
 
     required_approvals = all_codeowners_approved and min_approvals_met
 
-    print(f"::set-output name=approved::{str(required_approvals).lower()}")
-    with open(os.environ["GITHUB_ENV"], "a") as env_file:
-        env_file.write(f"REQUIRED_APPROVALS_MET={str(required_approvals).lower()}")
+    # print(f"::set-output name=approved::{str(required_approvals).lower()}")
+    # print(f'echo "approved={str(required_approvals).lower()}" >> "$GITHUB_OUTPUT"')
+    # subprocess.run(
+    #     f'echo "approved={str(required_approvals).lower()}" >> "$GITHUB_OUTPUT"',
+    #     shell=True,
+    # )
+    # try:
+    with open(os.environ["GITHUB_OUTPUT"], "a") as github_output:
+        github_output.write(f"approved={str(required_approvals).lower()}")
+        # print(f"approved={str(required_approvals).lower()}", file=fh)
+    # except Exception as e:
+    #     logging.error(f"Failed to write to GITHUB_OUTPUT: {e}")
 
     if required_approvals:
         logging.info(f"Required approvals met: {required_codeowner_teams}\n{reason}")

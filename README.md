@@ -3,13 +3,23 @@ Checks if the required codeowners have approved a PR and requires a minimum numb
 
 ### Inputs:
 - `token`
+  - **required**
   - The PR token, accessible at `secrets.GITHUB_TOKEN`
 - `read_org_scoped_token`
+  - **required**
   - A Personal Access Token (PAT) that has the `read:org` scope for the organization `org_name`
 - `org_name`
+  - **required**
   - The github organization to search for teams and team members
 - `min_approvals`
+  - **required**
   - The minimum number of approvals, regardless of codeowners team membership
+- `pr_number`
+  - _optional_
+  - Pull request number, mutually exclusive with branch, will check approvals on this PR if supplied. If not supplied, will check approvals on the PR that triggered the workflow
+- `branch`
+  - _optional_
+  - Branch name, mutually exclusive with pr_number, will look for prs from this branch if supplied, and select the newest one if there are multiple. If not supplied, will check approvals on the PR that triggered the workflow
 
 ### How to use this GitHub Action:
 1. Ensure your repo has a codeowners file at `/.github/CODEOWNERS` or `/CODEOWNERS`  

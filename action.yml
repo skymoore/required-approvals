@@ -17,7 +17,10 @@ inputs:
     description: "Minimum number of approvals"
     required: true
   pr_number:
-    description: "Pull request number, will check approvals on this PR if supplied. If not supplied, will check approvals on the PR that triggered the workflow"
+    description: "Pull request number, mutually exclusive with branch, will check approvals on this PR if supplied. If not supplied, will check approvals on the PR that triggered the workflow"
+    required: false
+  branch:
+    description: "Branch name, mutually exclusive with pr_number, will look for prs from this branch if supplied, and select the newest one if there are multiple. If not supplied, will check approvals on the PR that triggered the workflow"
     required: false
 outputs:
   approved:
