@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, logging, subprocess
+import os, logging
 from github import Github
 
 
@@ -89,6 +89,7 @@ def main():
         pr_number = int(gh_ref_parts[-1])
 
     pr = repo.get_pull(pr_number)
+
     reviews = pr.get_reviews()
 
     changed_files = [f.filename for f in pr.get_files()]
@@ -97,8 +98,8 @@ def main():
     logging.debug(f"Changed dirs: {changed_dirs}")
 
     required_codeowner_teams = {}
-    for dir in changed_dirs:
-        required_codeowner_teams.update(get_required_codeowners(repo, pr, dir))
+    for directory in changed_dirs:
+        required_codeowner_teams.update(get_required_codeowners(repo, pr, directory))
     logging.info(f"Required codeowners: {required_codeowner_teams}")
 
     reviews = list(reviews)
@@ -111,17 +112,17 @@ def main():
         logging.debug(f"  {review.user.login} {review.state}: teams: {user_teams}")
 
         if review.state == "APPROVED":
-            # TODO: make sure a dismissed review doesn't count as an approval
-            #  2023-04-05 06:09:56 [INFO] Found 2 reviews for PR 2 (IN-3032: testing):
-            #  2023-04-05 06:09:56 [INFO] Reviews:
-            #  2023-04-05 06:10:00 [INFO]   vistrcm APPROVED: for: infra
-            #  2023-04-05 06:10:04 [INFO]   vistrcm APPROVED: for: infra
             for team in user_teams:
                 if team.name in required_codeowner_teams:
+                    if review.commit_id != pr.head.sha:
+                        logging.info(
+                            f"  {review.user.login} {review.state}: at commit: {review.commit_id} for: {team.name} (not the latest commit, ignoring)"
+                        )
+                        continue
                     required_codeowner_teams[team.name] = True
                     approved_codeowners.append(review.user.login)
                     logging.info(
-                        f"  {review.user.login} {review.state}: for: {team.name}"
+                        f"  {review.user.login} {review.state}: at commit: {review.commit_id} for: {team.name}"
                     )
 
         elif review.state == "CHANGES_REQUESTED":
@@ -152,18 +153,8 @@ def main():
 
     required_approvals = all_codeowners_approved and min_approvals_met
 
-    # print(f"::set-output name=approved::{str(required_approvals).lower()}")
-    # print(f'echo "approved={str(required_approvals).lower()}" >> "$GITHUB_OUTPUT"')
-    # subprocess.run(
-    #     f'echo "approved={str(required_approvals).lower()}" >> "$GITHUB_OUTPUT"',
-    #     shell=True,
-    # )
-    # try:
     with open(os.environ["GITHUB_OUTPUT"], "a") as github_output:
         github_output.write(f"approved={str(required_approvals).lower()}")
-        # print(f"approved={str(required_approvals).lower()}", file=fh)
-    # except Exception as e:
-    #     logging.error(f"Failed to write to GITHUB_OUTPUT: {e}")
 
     if required_approvals:
         logging.info(f"Required approvals met: {required_codeowner_teams}\n{reason}")
