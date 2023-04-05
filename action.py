@@ -86,6 +86,14 @@ def main():
             gh, os.environ["INPUT_BRANCH"], gh_repo
         )
     else:
+        # TODO: fix this
+        # Traceback (most recent call last):
+        #   File "/var/ghaction/action.py", line 178, in <module>
+        #     main()
+        #   File "/var/ghaction/action.py", line 89, in main
+        #     pr_number = int(gh_ref_parts[-1])
+        # ValueError: invalid literal for int() with base 10: 'merge'
+        logging.info(gh_ref_parts)
         pr_number = int(gh_ref_parts[-1])
 
     pr = repo.get_pull(pr_number)
