@@ -140,7 +140,7 @@ def main():
             logging.debug(f"  {review.user.login} {review.state}: ignoring")
 
     all_codeowners_approved = all(required_codeowner_teams.values())
-    min_approvals_met = len(approved_codeowners) >= min_approvals
+    min_approvals_met = len(set(approved_codeowners)) >= min_approvals
 
     co_reason = (
         "all codeowners approved"
