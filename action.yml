@@ -17,11 +17,15 @@ inputs:
     description: "Minimum number of approvals"
     required: true
   pr_number:
-    description: "Pull request number, mutually exclusive with branch, will check approvals on this PR if supplied. If not supplied, will check approvals on the PR that triggered the workflow"
+    description: "Pull request number, mutually exclusive with branch, will check approvals on this PR if supplied. If not supplied, will check approvals on the PR that triggered the workflow. If both pr_number and branch are supplied it will default to the latest pr on the branch."
     required: false
   branch:
-    description: "Branch name, mutually exclusive with pr_number, will look for prs from this branch if supplied, and select the newest one if there are multiple. If not supplied, will check approvals on the PR that triggered the workflow"
+    description: "Branch name, mutually exclusive with pr_number, will look for prs from this branch if supplied, and select the newest one if there are multiple. If not supplied, will check approvals on the PR that triggered the workflow.  If both pr_number and branch are supplied it will default to the latest pr on the branch."
     required: false
+  require_all_approvals_latest_commit:
+    description: "Require all approvals to be on the latest commit of the PR, ignore approvals on previous commits."
+    required: false
+    default: "true"
 outputs:
   approved:
     description: "True if all required approvals are met, false otherwise"

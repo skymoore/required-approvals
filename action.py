@@ -68,6 +68,9 @@ def main():
     read_org_token = os.environ["INPUT_READ_ORG_SCOPED_TOKEN"]
     org_name = os.environ["INPUT_ORG_NAME"]
     min_approvals = int(os.environ["INPUT_MIN_APPROVALS"])
+    require_all_approvals_latest_commit = os.environ[
+        "INPUT_REQUIRE_ALL_APPROVALS_LATEST_COMMIT"
+    ]
     gh_ref = os.environ["GITHUB_REF"]
     gh_repo = os.environ["GITHUB_REPOSITORY"]
 
@@ -78,10 +81,10 @@ def main():
     gh_ref_parts = gh_ref.split("/")
     logging.debug(gh_ref_parts)
 
-    if "INPUT_PR_NUMBER" in os.environ and os.environ["INPUT_PR_NUMBER"] != "":
-        pr_number = int(os.environ["INPUT_PR_NUMBER"])
-    elif "INPUT_BRANCH" in os.environ and os.environ["INPUT_BRANCH"] != "":
+    if "INPUT_BRANCH" in os.environ and os.environ["INPUT_BRANCH"] != "":
         pr_number = get_newest_pr_number_by_branch(gh, os.environ["INPUT_BRANCH"], repo)
+    elif "INPUT_PR_NUMBER" in os.environ and os.environ["INPUT_PR_NUMBER"] != "":
+        pr_number = int(os.environ["INPUT_PR_NUMBER"])
     else:
         pr_number = int(gh_ref_parts[-2])
 
@@ -111,7 +114,10 @@ def main():
         if review.state == "APPROVED":
             for team in user_teams:
                 if team.name in required_codeowner_teams:
-                    if review.commit_id != pr.head.sha:
+                    if (
+                        require_all_approvals_latest_commit == "true"
+                        and review.commit_id != pr.head.sha
+                    ):
                         logging.info(
                             f"  {review.user.login} {review.state}: at commit: {review.commit_id} for: {team.name} (not the latest commit, ignoring)"
                         )
