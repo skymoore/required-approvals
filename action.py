@@ -4,8 +4,7 @@ import os, logging
 from github import Github
 
 
-def get_newest_pr_number_by_branch(gh, branch_name, repo_name):
-    repo = gh.get_repo(repo_name)
+def get_newest_pr_number_by_branch(gh, branch_name, repo):
     pull_requests = repo.get_pulls(state="all", head=branch_name)
     if pull_requests.totalCount == 0:
         logging.info(f"No PRs found for branch {branch_name}")
@@ -82,19 +81,9 @@ def main():
     if "INPUT_PR_NUMBER" in os.environ and os.environ["INPUT_PR_NUMBER"] != "":
         pr_number = int(os.environ["INPUT_PR_NUMBER"])
     elif "INPUT_BRANCH" in os.environ and os.environ["INPUT_BRANCH"] != "":
-        pr_number = get_newest_pr_number_by_branch(
-            gh, os.environ["INPUT_BRANCH"], gh_repo
-        )
+        pr_number = get_newest_pr_number_by_branch(gh, os.environ["INPUT_BRANCH"], repo)
     else:
-        # TODO: fix this
-        # Traceback (most recent call last):
-        #   File "/var/ghaction/action.py", line 178, in <module>
-        #     main()
-        #   File "/var/ghaction/action.py", line 89, in main
-        #     pr_number = int(gh_ref_parts[-1])
-        # ValueError: invalid literal for int() with base 10: 'merge'
-        logging.info(gh_ref_parts)
-        pr_number = int(gh_ref_parts[-1])
+        pr_number = int(gh_ref_parts[-2])
 
     pr = repo.get_pull(pr_number)
 
