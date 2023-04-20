@@ -22,7 +22,12 @@ Checks if the required codeowners have approved a PR and requires a minimum numb
   - Branch name, mutually exclusive with pr_number, will look for prs from this branch if supplied, select the newest one if there are multiple, and check approvals on that PR. If not supplied, will check approvals on the PR that triggered the workflow.  If both pr_number and branch are supplied it will default to the latest pr on the branch.
 - `require_all_approvals_latest_commit`
   - _optional_
+  - default: `true`
   - Require all approvals to be on the latest commit of the PR, ignore approvals on previous commits.
+
+### Outputs:
+- `approved`
+  - `true` if all required approvals are met, `false` otherwise
 
 ### How to use this GitHub Action:
 1. Ensure your repo has a codeowners file at `/.github/CODEOWNERS` or `/CODEOWNERS`  
