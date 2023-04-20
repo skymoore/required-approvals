@@ -123,7 +123,8 @@ def main():
                         )
                         continue
                     required_codeowner_entities[team.name] = True
-                    approved_codeowners.append(review.user.login)
+                    if review.user.login not in approved_codeowners:
+                        approved_codeowners.append(review.user.login)
                     logging.info(
                         f"  {review.user.login} {review.state}: at commit: {review.commit_id} for: {team.name}"
                     )
