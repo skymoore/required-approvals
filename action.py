@@ -42,6 +42,7 @@ def get_required_codeowners(changed_files, repo, pr):
                 for owner in owners:
                     owner = re.sub(r"[<>\(\)\[\]\{\},;+*?=]", "", owner)
                     owner = owner.replace("@", "").split("/")[-1]
+                    owner = owner.lower()
                     if owner not in codeowners:
                         codeowners[owner] = False
 
@@ -113,7 +114,8 @@ def main():
 
         if review.state == "APPROVED":
             for team in user_teams:
-                if team.name in required_codeowner_entities:
+                team_name = team.name.lower()
+                if team_name in required_codeowner_entities:
                     if (
                         require_all_approvals_latest_commit == "true"
                         and review.commit_id != pr.head.sha
@@ -122,7 +124,7 @@ def main():
                             f"  {review.user.login} {review.state}: at commit: {review.commit_id} for: {team.name} (not the latest commit, ignoring)"
                         )
                         continue
-                    required_codeowner_entities[team.name] = True
+                    required_codeowner_entities[team_name] = True
                     if review.user.login not in approved_codeowners:
                         approved_codeowners.append(review.user.login)
                     logging.info(
@@ -136,8 +138,9 @@ def main():
 
         elif review.state == "CHANGES_REQUESTED":
             for team in user_teams:
-                if team.name in required_codeowner_entities:
-                    required_codeowner_entities[team.name] = False
+                team_name = team.name.lower()
+                if team_name in required_codeowner_entities:
+                    required_codeowner_entities[team_name] = False
                     logging.info(
                         f"  {review.user.login} {review.state}: for: {team.name}"
                     )
