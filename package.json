@@ -1,4 +1,10 @@
 {
+  "name": "required-approvals",
+  "version": "3.0.0",
+  "private": true,
+  "scripts": {
+    "build": "ncc build src/index.js -o dist"
+  },
   "dependencies": {
     "@octokit/rest": "^19.0.7",
     "minimatch": "^9.0.0"
