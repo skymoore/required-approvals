@@ -31,5 +31,5 @@ outputs:
     description: "True if all required approvals are met, false otherwise"
 
 runs:
-  using: "docker"
-  image: "Dockerfile"
+  using: "node16"
+  main: "action.js"

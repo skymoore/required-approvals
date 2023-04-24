@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@octokit/rest": "^19.0.7",
+    "minimatch": "^9.0.0"
+  }
+}
