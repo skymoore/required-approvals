@@ -49,20 +49,17 @@ def get_required_codeowners(changed_files, repo, pr):
     return codeowners
 
 
-def get_user_teams(gh, username, org_name):
+def get_user_teams(username, org_teams, org_name):
     logging.debug(f"Getting teams for {username}")
-    user = gh.get_user(username)
-    org = gh.get_organization(org_name)
-    org_teams = org.get_teams()
-    logging.debug(f"Found teams for {org.login}: {list(org_teams)}")
+
     teams = []
 
     for team in org_teams:
         org_team_members = [member.login for member in team.get_members()]
         logging.debug(
-            f"Found members for {org.login}/{team.name}: {list(org_team_members)}"
+            f"Found members for {org_name}/{team.name}: {list(org_team_members)}"
         )
-        if user.login in org_team_members:
+        if username in org_team_members:
             teams.append(team)
 
     return teams
@@ -87,6 +84,8 @@ def main():
     gh_ref_parts = gh_ref.split("/")
     logging.debug(gh_ref_parts)
 
+    org_teams = gh_org.get_organization(org_name).get_teams()
+
     if "INPUT_BRANCH" in os.environ and os.environ["INPUT_BRANCH"] != "":
         pr_number = get_newest_pr_number_by_branch(gh, os.environ["INPUT_BRANCH"], repo)
     elif "INPUT_PR_NUMBER" in os.environ and os.environ["INPUT_PR_NUMBER"] != "":
@@ -109,12 +108,13 @@ def main():
     logging.info("Reviews: ")
 
     for review in reviews:
-        user_teams = get_user_teams(gh_org, review.user.login, org_name)
+        user_teams = get_user_teams(review.user.login, org_teams, org_name)
         logging.debug(f"  {review.user.login} {review.state}: teams: {user_teams}")
 
         if review.state == "APPROVED":
             for team in user_teams:
                 team_name = team.name.lower()
+                team_name = team_name.replace(" ", "-")
                 if team_name in required_codeowner_entities:
                     if (
                         require_all_approvals_latest_commit == "true"
