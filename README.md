@@ -52,6 +52,10 @@ Checks if the required codeowners have approved a PR and requires a minimum numb
     jobs:
       check-approvals:
         runs-on: ubuntu-latest
+        permissions:
+          id-token: write
+          contents: read
+          pull-requests: read
         steps:
           - name: Check for required approvals
             id: check-approvals
