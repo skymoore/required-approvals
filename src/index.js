@@ -148,6 +148,7 @@ async function main() {
 
     for (const review of reviews) {
         const userTeams = await getUserTeams(review.user.login, orgName, orgTeams, readOrgOctokit);
+        const reviewerLogin = review.user.login.toLowerCase();
 
         if (review.state === "APPROVED") {
             for (const team of userTeams) {
@@ -158,7 +159,7 @@ async function main() {
                         review.commit_id !== pr.head.sha
                     ) {
                         console.info(
-                            `  ${review.user.login} ${review.state}: at commit: ${review.commit_id} for: ${team.name} (not the latest commit, ignoring)`
+                            `  ${reviewerLogin} ${review.state}: at commit: ${review.commit_id} for: ${team.name} (not the latest commit, ignoring)`
                         );
                         continue;
                     }
@@ -167,14 +168,15 @@ async function main() {
                         approvedCodeowners.push(review.user.login);
                     }
                     console.info(
-                        `  ${review.user.login} ${review.state}: at commit: ${review.commit_id} for: ${team.name}`
+                        `  ${reviewerLogin} ${review.state}: at commit: ${review.commit_id} for: ${team.name}`
                     );
                 }
             }
-            if (requiredCodeownerEntities.hasOwnProperty(review.user.login)) {
-                requiredCodeownerEntities[review.user.login] = true;
+
+            if (requiredCodeownerEntities.hasOwnProperty(reviewerLogin)) {
+                requiredCodeownerEntities[reviewerLogin] = true;
                 console.info(
-                    `  ${review.user.login} ${review.state}: at commit: ${review.commit_id}`
+                    `  ${reviewerLogin} ${review.state}: at commit: ${review.commit_id}`
                 );
             }
         } else if (review.state === "CHANGES_REQUESTED") {
@@ -182,15 +184,15 @@ async function main() {
                 const teamName = team.name.toLowerCase();
                 if (requiredCodeownerEntities.hasOwnProperty(teamName)) {
                     requiredCodeownerEntities[teamName] = false;
-                    console.info(`  ${review.user.login} ${review.state}: for: ${team.name}`);
+                    console.info(`  ${reviewerLogin} ${review.state}: for: ${team.name}`);
                 }
             }
-            if (requiredCodeownerEntities.hasOwnProperty(review.user.login)) {
-                requiredCodeownerEntities[review.user.login] = false;
-                console.info(`  ${review.user.login} ${review.state}: for: ${review.user.login}`);
+            if (requiredCodeownerEntities.hasOwnProperty(reviewerLogin)) {
+                requiredCodeownerEntities[reviewerLogin] = false;
+                console.info(`  ${reviewerLogin} ${review.state}: for: ${reviewerLogin}`);
             }
         } else {
-            console.debug(`  ${review.user.login} ${review.state}: ignoring`);
+            console.debug(`  ${reviewerLogin} ${review.state}: ignoring`);
         }
     }
 
