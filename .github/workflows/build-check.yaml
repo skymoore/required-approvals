@@ -19,7 +19,7 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Build
+    - name: Build dist/index.js
       run: make 
 
     - name: Check for dist/index.js
