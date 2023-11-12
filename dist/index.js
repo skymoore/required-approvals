@@ -8850,21 +8850,29 @@ async function getRequiredCodeowners(changedFiles, repo, pr, octokit) {
 
         const [pattern, ...owners] = line.trim().split(/\s+/);
 
-        for (const changedFile of changedFiles) {
-            if (minimatch(changedFile, pattern)) {
-                for (let owner of owners) {
-                    owner = owner.replace(/[<>\(\)\[\]\{\},;+*?=]/g, "");
-                    owner = owner.replace("@", "").split("/").pop();
-                    owner = owner.toLowerCase();
-                    if (!codeowners.hasOwnProperty(owner)) {
-                        codeowners[owner] = false;
-                    }
+        if (pattern === '*') {
+            updateCodeowners(owners);
+        } else {
+            for (const changedFile of changedFiles) {
+                if (minimatch(changedFile, pattern)) {
+                    updateCodeowners(owners);
                 }
             }
         }
     }
 
     return codeowners;
+
+    function updateCodeowners(owners) {
+        for (let owner of owners) {
+            owner = owner.replace(/[<>\(\)\[\]\{\},;+*?=]/g, "");
+            owner = owner.replace("@", "").split("/").pop();
+            owner = owner.toLowerCase();
+            if (!codeowners.hasOwnProperty(owner)) {
+                codeowners[owner] = false;
+            }
+        }
+    }
 }
 
 async function getUserTeams(username, orgName, orgTeams, octokit) {
