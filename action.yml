@@ -31,5 +31,5 @@ outputs:
     description: "True if all required approvals are met, false otherwise"
 
 runs:
-  using: "node16"
+  using: "node20"
   main: "dist/index.js"
