@@ -118,7 +118,11 @@ async function main() {
     const [owner, repoName] = ghRepo.split("/");
     const repo = await octokit.repos.get({ owner, repo: repoName });
 
-    const { data: orgTeams } = await readOrgOctokit.teams.list({ org: orgName });
+    const orgTeams = await readOrgOctokit.paginate(
+        readOrgOctokit.teams.list,
+        { org: orgName },
+        (response) => response.data
+    );
 
     let prNumber;
     if (process.env["INPUT_BRANCH"] && process.env["INPUT_BRANCH"] !== "") {
