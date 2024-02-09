@@ -71,7 +71,6 @@ async function getUserTeams(username, orgName, orgTeams, octokit) {
     const teams = [];
 
     for (const team of orgTeams) {
-        console.log()
         const { data: teamMembers } = await octokit.teams.listMembersInOrg({
             org: orgName,
             team_slug: team.slug,
@@ -119,7 +118,11 @@ async function main() {
     const [owner, repoName] = ghRepo.split("/");
     const repo = await octokit.repos.get({ owner, repo: repoName });
 
-    const { data: orgTeams } = await readOrgOctokit.teams.list({ org: orgName });
+    const orgTeams = await readOrgOctokit.paginate(
+        readOrgOctokit.teams.list,
+        { org: orgName },
+        (response) => response.data
+    );
 
     let prNumber;
     if (process.env["INPUT_BRANCH"] && process.env["INPUT_BRANCH"] !== "") {
