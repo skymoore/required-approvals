@@ -71,7 +71,6 @@ async function getUserTeams(username, orgName, orgTeams, octokit) {
     const teams = [];
 
     for (const team of orgTeams) {
-        console.log()
         const { data: teamMembers } = await octokit.teams.listMembersInOrg({
             org: orgName,
             team_slug: team.slug,
