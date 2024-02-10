@@ -8926,7 +8926,7 @@ async function main() {
     const [owner, repoName] = ghRepo.split("/");
     const repo = await octokit.repos.get({ owner, repo: repoName });
 
-    const orgTeams = await readOrgOctokit.paginate(
+    const allOrgTeams = await readOrgOctokit.paginate(
         readOrgOctokit.teams.list,
         { org: orgName },
         (response) => response.data
@@ -8962,6 +8962,26 @@ async function main() {
 
     const requiredCodeownerEntities = await getRequiredCodeowners(changedFiles, repo.data, pr, octokit);
     console.info(`Required codeowners: ${JSON.stringify(requiredCodeownerEntities)}`);
+
+    const orgTeams = [];
+
+    if (process.env["INPUT_LIMIT_ORG_TEAMS_TO_CODEOWNERS_FILE"] === "true") {
+        const requiredCodeownerEntitySlugs = new Set(Object.keys(requiredCodeownerEntities));
+        const filteredTeams = allOrgTeams.filter((team) => {
+            return requiredCodeownerEntitySlugs.has(team.slug);
+        });
+
+        if (filteredTeams.length !== requiredCodeownerEntitySlugs.size) {
+            for (const slug of requiredCodeownerEntitySlugs) {
+                if (!filteredTeams.some((team) => team.slug === slug)) {
+                    console.warn(`  Team: ${slug} not found in Org: ${orgName}`);
+                }
+            }
+        }
+        orgTeams.push(...filteredTeams);
+    } else {
+        orgTeams = allOrgTeams;
+    }
 
     const approvedCodeowners = [];
 
@@ -9039,7 +9059,6 @@ async function main() {
 }
 
 main();
-
 
 })();
 
