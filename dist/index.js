@@ -8813,12 +8813,16 @@ const path = __nccwpck_require__(17);
 const fs = __nccwpck_require__(147);
 
 async function getNewestPRNumberByBranch(octokit, branchName, repo) {
-    const { data: pullRequests } = await octokit.pulls.list({
-        owner: repo.owner.login,
-        repo: repo.name,
-        state: "all",
-        head: `${repo.owner.login}:${branchName}`,
-    });
+    const pullRequests = await octokit.paginate(
+        octokit.pulls.list,
+        {
+            owner: repo.owner.login,
+            repo: repo.name,
+            state: "all",
+            head: `${repo.owner.login}:${branchName}`,
+        },
+        (response) => response.data
+    );
 
     if (pullRequests.length === 0) {
         console.info(`No PRs found for branch ${branchName}`);
@@ -8879,10 +8883,14 @@ async function getUserTeams(username, orgName, orgTeams, octokit) {
     const teams = [];
 
     for (const team of orgTeams) {
-        const { data: teamMembers } = await octokit.teams.listMembersInOrg({
-            org: orgName,
-            team_slug: team.slug,
-        });
+        const teamMembers = await octokit.paginate(
+            octokit.teams.listMembersInOrg,
+            {
+                org: orgName,
+                team_slug: team.slug,
+            },
+            (response) => response.data
+        );
 
         const memberLogins = teamMembers.map((member) => member.login);
         if (memberLogins.includes(username)) {
@@ -8948,17 +8956,25 @@ async function main() {
         pull_number: prNumber,
     });
 
-    const { data: reviews } = await octokit.pulls.listReviews({
-        owner: repo.data.owner.login,
-        repo: repo.data.name,
-        pull_number: pr.number,
-    });
+    const reviews = await octokit.paginate(
+        octokit.pulls.listReviews,
+        {
+            owner: repo.data.owner.login,
+            repo: repo.data.name,
+            pull_number: pr.number,
+        },
+        (response) => response.data
+    );
 
-    const changedFiles = (await octokit.pulls.listFiles({
-        owner: repo.data.owner.login,
-        repo: repo.data.name,
-        pull_number: pr.number,
-    })).data.map((f) => f.filename);
+    const changedFiles = await octokit.paginate(
+        octokit.pulls.listFiles,
+        {
+            owner: repo.data.owner.login,
+            repo: repo.data.name,
+            pull_number: pr.number
+        },
+        (response) => response.data.map((f) => f.filename)
+    );
 
     const requiredCodeownerEntities = await getRequiredCodeowners(changedFiles, repo.data, pr, octokit);
     console.info(`Required codeowners: ${JSON.stringify(requiredCodeownerEntities)}`);
