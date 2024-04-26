@@ -28,6 +28,10 @@ Checks if the required codeowners have approved a PR and requires a minimum numb
   - _optional_
   - default: `false`
   - Enable to limit a user's team membership check to only those specified in the `CODEOWNERS` file. This overrides the default behavior of checking all teams in the organization `org_name`. Consider enabling for environments with a large number of teams to reduce execution time.
+- `approval_mode`
+  - _optional_
+  - default: `ALL`
+  - Determines the approval requirement for codeowners. If set to "ALL", all codeowners must approve. If set to "ANY", at least one approval from a codeowner is sufficient. If not provided, the default is "ALL".
 
 ### Outputs:
 - `approved`
