@@ -8927,6 +8927,7 @@ async function main() {
         process.env["INPUT_REQUIRE_ALL_APPROVALS_LATEST_COMMIT"];
     const ghRef = process.env["GITHUB_REF"];
     const ghRepo = process.env["GITHUB_REPOSITORY"];
+    const approvalMode = process.env["INPUT_APPROVAL_MODE"];
 
     const octokit = new Octokit({ auth: token });
     const readOrgOctokit = new Octokit({ auth: readOrgToken });
@@ -9052,15 +9053,24 @@ async function main() {
     }
 
     const allCodeownersApproved = Object.values(requiredCodeownerEntities).every((value) => value);
+    const anyCodeownerApproved = Object.values(requiredCodeownerEntities).some((value) => value);
+
+    const codeownersApprovalsCheck = approvalMode === "ANY" ? anyCodeownerApproved : allCodeownersApproved;
     const minApprovalsMet = new Set(approvedCodeowners).size >= minApprovals;
 
-    const coReason = allCodeownersApproved ? "all codeowners approved" : "not all codeowners approved";
+    let coReason;
+    if (approvalMode === "ALL") {
+        coReason = allCodeownersApproved ? "All codeowners have approved." : "Not all codeowners have approved.";
+    } else if (approvalMode === "ANY") {
+        coReason = anyCodeownerApproved ? "At least one of the codeowners has approved." : "None of the codeowners has approved.";
+    }
+
     const maReason = minApprovalsMet
         ? `total approvals:${approvedCodeowners.length} >= minimum approvals:${minApprovals}`
         : `total approvals:${approvedCodeowners.length} < minimum approvals:${minApprovals}`;
     const reason = `${coReason} and ${maReason}`;
 
-    const requiredApprovals = allCodeownersApproved && minApprovalsMet;
+    const requiredApprovals = codeownersApprovalsCheck && minApprovalsMet;
 
     const outputPath = process.env["GITHUB_OUTPUT"];
     fs.appendFileSync(outputPath, `approved=${requiredApprovals.toString().toLowerCase()}`);
@@ -9072,6 +9082,7 @@ async function main() {
         console.warn(`Required approvals not met: ${reason}`);
         process.exit(1);
     }
+
 }
 
 main();
