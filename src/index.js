@@ -200,23 +200,22 @@ async function main() {
 
         if (review.state === "APPROVED") {
             for (const team of userTeams) {
-                const teamName = team.name.toLowerCase().replace(/ /g, "-");
-                if (requiredCodeownerEntities.hasOwnProperty(teamName)) {
+                if (requiredCodeownerEntities.hasOwnProperty(team.slug)) {
                     if (
                         requireAllApprovalsLatestCommit === "true" &&
                         review.commit_id !== pr.head.sha
                     ) {
                         console.info(
-                            `  ${reviewerLogin} ${review.state}: at commit: ${review.commit_id} for: ${team.name} (not the latest commit, ignoring)`
+                            `  ${reviewerLogin} ${review.state}: at commit: ${review.commit_id} for: ${team.slug} (not the latest commit, ignoring)`
                         );
                         continue;
                     }
-                    requiredCodeownerEntities[teamName] = true;
+                    requiredCodeownerEntities[team.slug] = true;
                     if (!approvedCodeowners.includes(review.user.login)) {
                         approvedCodeowners.push(review.user.login);
                     }
                     console.info(
-                        `  ${reviewerLogin} ${review.state}: at commit: ${review.commit_id} for: ${team.name}`
+                        `  ${reviewerLogin} ${review.state}: at commit: ${review.commit_id} for: ${team.slug}`
                     );
                 }
             }
@@ -229,10 +228,9 @@ async function main() {
             }
         } else if (review.state === "CHANGES_REQUESTED") {
             for (const team of userTeams) {
-                const teamName = team.name.toLowerCase();
-                if (requiredCodeownerEntities.hasOwnProperty(teamName)) {
-                    requiredCodeownerEntities[teamName] = false;
-                    console.info(`  ${reviewerLogin} ${review.state}: for: ${team.name}`);
+                if (requiredCodeownerEntities.hasOwnProperty(team.slug)) {
+                    requiredCodeownerEntities[team.slug] = false;
+                    console.info(`  ${reviewerLogin} ${review.state}: for: ${team.slug}`);
                 }
             }
             if (requiredCodeownerEntities.hasOwnProperty(reviewerLogin)) {
