@@ -44,12 +44,17 @@ async function getRequiredCodeowners(changedFiles, repo, pr, octokit) {
             continue;
         }
 
-        const [pattern, ...owners] = line.trim().split(/\s+/);
+        let [pattern, ...owners] = line.trim().split(/\s+/);
+
+        if (!pattern.startsWith('/')) {
+            pattern = `**/${pattern}`;
+        }
 
         if (pattern === '*') {
             updateCodeowners(owners);
         } else {
-            for (const changedFile of changedFiles) {
+            for (let changedFile of changedFiles) {
+                changedFile = `/${changedFile}`;
                 if (minimatch(changedFile, pattern)) {
                     updateCodeowners(owners);
                 }
