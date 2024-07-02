@@ -8857,12 +8857,16 @@ async function getRequiredCodeowners(changedFiles, repo, pr, octokit) {
         if (pattern === '*') {
             updateCodeowners(owners);
         } else {
-            if (!pattern.startsWith('/')) {
+            if (!pattern.startsWith('/') && !pattern.startsWith('*')) {
                 pattern = `**/${pattern}`;
+            }
+            if (!path.extname(pattern) && !pattern.endsWith('*')) {
+                pattern = `${pattern}/**`;
             }
             for (let changedFile of changedFiles) {
                 changedFile = `/${changedFile}`;
-                if (minimatch(changedFile, pattern)) {
+                if (minimatch(changedFile, pattern, { dot: true })) {
+                    console.log(`Match found: File - ${changedFile}, Pattern - ${pattern}`);
                     updateCodeowners(owners);
                 }
             }
@@ -8984,7 +8988,7 @@ async function main() {
     const requiredCodeownerEntities = await getRequiredCodeowners(changedFiles, repo.data, pr, octokit);
     console.info(`Required codeowners: ${Object.keys(requiredCodeownerEntities).join(', ')}`);
 
-    const orgTeams = [];
+    let orgTeams = [];
 
     if (process.env["INPUT_LIMIT_ORG_TEAMS_TO_CODEOWNERS_FILE"] === "true") {
         const requiredCodeownerEntitySlugs = new Set(Object.keys(requiredCodeownerEntities));
@@ -9004,7 +9008,7 @@ async function main() {
         orgTeams = allOrgTeams;
     }
 
-    const approvedCodeowners = [];
+    let approvedCodeowners = [];
 
     for (const review of reviews) {
         const userTeams = await getUserTeams(review.user.login, orgName, orgTeams, readOrgOctokit);
