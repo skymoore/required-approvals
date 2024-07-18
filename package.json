@@ -1,6 +1,6 @@
 {
   "name": "required-approvals",
-  "version": "4.2.4",
+  "version": "4.2.5",
   "private": true,
   "scripts": {
     "build": "ncc build src/index.js -o dist"

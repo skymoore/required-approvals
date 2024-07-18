@@ -8858,10 +8858,10 @@ async function getRequiredCodeowners(changedFiles, repo, pr, octokit) {
             updateCodeowners(owners);
         } else {
             if (!pattern.startsWith('/') && !pattern.startsWith('*')) {
-                pattern = `**/${pattern}`;
+                pattern = `{**/,}${pattern}`;
             }
             if (!path.extname(pattern) && !pattern.endsWith('*')) {
-                pattern = `${pattern}/**`;
+                pattern = `${pattern}{/**,}`;
             }
             for (let changedFile of changedFiles) {
                 changedFile = `/${changedFile}`;
