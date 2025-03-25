@@ -108,8 +108,12 @@ async function getContent(octokit, repo, path, ref) {
             repo: repo.name,
             path,
             ref,
+            headers: {
+                // Raw media type necessary for files over 1MB
+                accept: "application/vnd.github.v3.raw",
+            }
         });
-        return Buffer.from(data.content, "base64").toString();
+        return data;
     } catch (error) {
         if (error.status === 404) {
             return null;
